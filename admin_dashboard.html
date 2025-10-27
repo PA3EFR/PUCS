@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - PUCS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(180deg, #f8ef05 0%, #1f1f1c 100%);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .header-logo-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-logo-block img {
+            height: 150px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .header-title-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-below {
+            font-weight: bold;
+            font-size: 2em;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .header-nav-block {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .nav-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-link.logout {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .nav-link.download {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .refresh-status {
+            font-size: 0.85em;
+            color: #666;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 6px 10px;
+            border-radius: 15px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .refresh-status.paused {
+            background: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+            border-color: #ff9800;
+        }
+
+        .refresh-status.active {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .crew-logo-center {
+            width: 120px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .admin-main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .admin-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .flash-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flash-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .entries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .entry-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .position-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .entry-time {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .entry-callsign {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .entry-location, .entry-comment {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .entry-actions {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .config-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .config-info {
+            grid-column: span 2;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-right: 10px;
+            text-decoration: none;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .api-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .api-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .api-info p {
+            margin-bottom: 10px;
+        }
+
+        .api-test {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .api-success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .api-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            color: #7f8c8d;
+        }
+
+        /* QRZ Config Popup Styles */
+        .qrz-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .qrz-modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .qrz-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .qrz-modal-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .qrz-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .qrz-close:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .qrz-form-group {
+            margin-bottom: 20px;
+        }
+
+        .qrz-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .qrz-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .qrz-form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .qrz-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .qrz-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .qrz-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .qrz-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 900px) {
+            .header-flex {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0;
+            }
+            .header-logo-block, .header-nav-block, .header-title-center {
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            .header-title-center {
+                justify-content: center;
+            }
+            .config-form {
+                grid-template-columns: 1fr;
+            }
+            .config-info {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-flex">
+                <!-- Left: Logo -->
+                <div class="header-logo-block">
+                    <img src="http://pa3efr.nl/images/stories/2024/th.jpeg" alt="PA3EFR Logo">
+                </div>
+                <!-- Center: Title en Crew Logo -->
+                <div class="header-title-center">
+                    <span class="title-below">Pile Up Control System - Admin Dashboard</span>
+                    <img class="crew-logo-center" src="http://pa3efr.nl/images/stories/2017/pa3efr_crew_flag.jpg" alt="Crew Flag">
+                </div>
+                <!-- Right: Navigation -->
+                <div class="header-nav-block">
+                    <div id="refresh-status" class="refresh-status" title="Auto-refresh status">🔄 Auto-refresh: Actief</div>
+                    <a href="{{ url_for('admin_logout') }}" class="nav-link logout">🚪 Logout</a>
+                    <a href="{{ url_for('download_excel_entries') }}" class="nav-link download">📊 Download Entries</a>
+                    <button onclick="openQRZConfig()" class="nav-link" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border: none; cursor: pointer; margin-top: 10px;">🔑 API KEY</button>
+                </div>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <main class="admin-main">
+            <!-- Huidige Entries Sectie -->
+            <section class="admin-section">
+                <h2>📋 Huidige Entries</h2>
+                
+                <div class="entries-overview">
+                    {% if entries %}
+                        <div class="entries-grid">
+                            {% for entry in entries %}
+                            <div class="entry-card">
+                                <div class="entry-header">
+                                    <span class="position-badge">Positie {{ entry.position }}</span>
+                                    <span class="entry-time">{{ entry.entered_at.strftime('%d-%m-%Y %H:%M:%S') }}</span>
+                                </div>
+                                <div class="entry-callsign">{{ entry.callsign }}</div>
+                                {% if entry.location %}
+                                    <div class="entry-location"><strong>📍 QTH:</strong> {{ entry.location }}</div>
+                                {% endif %}
+                                {% if entry.comment %}
+                                    <div class="entry-comment"><strong>💬 Remarks:</strong> {{ entry.comment }}</div>
+                                {% endif %}
+                                <div class="entry-actions">
+                                    <form method="POST" 
+                                          action="{{ url_for('admin_delete_entry', position=entry.position) }}" 
+                                          style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-small">🗑️ Verwijderen</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% else %}
+                        <div class="empty-state">
+                            <p>📭 Geen entries op dit moment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Configuratie Sectie -->
+            <section class="admin-section">
+                <h2>📝 Station Configuratie</h2>
+                <form method="POST" action="{{ url_for('admin_update_config') }}" class="config-form">
+                    <div class="form-group">
+                        <label for="operator_name">Operator Name:</label>
+                        <input type="text" 
+                               id="operator_name" 
+                               name="operator_name" 
+                               value="{{ config.operator_name }}" 
+                               required 
+                               maxlength="100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="frequency">Frequency:</label>
+                        <input type="text" 
+                               id="frequency" 
+                               name="frequency" 
+                               value="{{ config.frequency }}" 
+                               required 
+                               maxlength="50"
+                               placeholder="bijv. 145.500 MHz">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
+                    
+                    <div class="config-info">
+                        <small>Laatst bijgewerkt: {{ config.updated_at.strftime('%d-%m-%Y %H:%M:%S') }}</small>
+                    </div>
+                </form>
+            </section>
+
+            <!-- API Info Sectie -->
+            <section class="admin-section">
+                <h2>🔌 API Informatie</h2>
+                <div class="api-info">
+                    <p><strong>Logboek Script Endpoint:</strong></p>
+                    <code>POST /api/clear_callsign</code>
+                    
+                    <p><strong>Actieve Callsigns:</strong></p>
+                    <code>GET /api/get_active_callsigns</code>
+                    
+                    <p><strong>API Key:</strong> Configureer via omgevingsvariabele <code>API_KEY</code></p>
+                    
+                    <div class="api-info" style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; margin-top: 10px; padding: 12px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>ℹ️ Let op:</strong> "Actieve radio entries" zijn de callsigns die via het frontend zijn toegevoegd. Je QRZ.com callsign (bijv. PH25XMAS) staat apart in de QRZ configuratie.
+                    </div>
+                    
+                    <div class="api-test">
+                        <button onclick="testAPI()" class="btn btn-secondary">🧪 Test API Verbinding</button>
+                        <div id="api-result"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- QRZ API Configuration Sectie -->
+            <section class="admin-section">
+                <h2>🔍 QRZ API Configuration</h2>
+                <div class="api-info">
+                    <p><strong>Huidige Configuratie:</strong></p>
+                    <div id="qrz-config-display" style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                        <p><strong>Callsign:</strong> <span id="qrz-display-callsign">Laden...</span></p>
+                        <p><strong>API Key:</strong> <span id="qrz-display-api-key">Laden...</span></p>
+                        <p><strong>Laatst bijgewerkt:</strong> <span id="qrz-display-updated">-</span></p>
+                    </div>
+                    
+                    <div class="api-test">
+                        <button onclick="testQRZAPI()" class="btn btn-primary">🧪 Test QRZ API Verbinding</button>
+                        <div id="qrz-api-test-result"></div>
+                    </div>
+                    
+                    <div class="api-info" style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 0.9em;">
+                        <strong>ℹ️ Test Info:</strong> Deze test controleert of de QRZ.com API sleutel werkt door een verbinding naar het logboek te maken.
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Erwin PA3EFR v1.0</p>
+        </footer>
+    </div>
+
+    <!-- QRZ Configuration Modal -->
+    <div id="qrzModal" class="qrz-modal">
+        <div class="qrz-modal-content">
+            <div class="qrz-modal-header">
+                <h3 class="qrz-modal-title">🔑 QRZ.com API Configuratie</h3>
+                <button class="qrz-close" onclick="closeQRZConfig()">&times;</button>
+            </div>
+            <form id="qrzForm">
+                <div class="qrz-info-bar" style="background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 0.9em; color: #2e7d32;">
+                    ℹ️ <strong>Neem de tijd:</strong> Auto-refresh is gepauzeerd zolang dit venster open is. Je kunt rustig de gegevens opzoeken en invullen.
+                </div>
+                <div class="qrz-form-group">
+                    <label for="qrz_callsign">QRZ Callsign:</label>
+                    <input type="text" id="qrz_callsign" name="callsign" placeholder="bijv. PH25XMAS" required>
+                </div>
+                <div class="qrz-form-group">
+                    <label for="qrz_api_key">QRZ API Key:</label>
+                    <input type="text" id="qrz_api_key" name="api_key" placeholder="bijv. 4DB9-.....-579F" required>
+                </div>
+                <div class="qrz-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeQRZConfig()">Annuleren</button>
+                    <button type="submit" class="btn btn-primary">💾 Opslaan</button>
+                </div>
+                <div id="qrzStatus" class="qrz-status"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '⏳ Bezig met testen...';
+            
+            fetch('/api/get_active_callsigns')
+                .then(response => response.json())
+                .then(data => {
+                    resultDiv.innerHTML = `
+                        <div class="api-success">
+                            ✅ API werkt! 
+                            Actieve radio entries: ${data.callsigns.length ? data.callsigns.join(', ') : 'Geen'}
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `
+                        <div class="api-error">
+                            ❌ API fout: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+        // Load QRZ configuration and display it
+        function loadQRZConfig() {
+            fetch('/admin/get_qrz_config')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Display callsign
+                        document.getElementById('qrz-display-callsign').textContent = data.callsign || 'Niet ingesteld';
+                        
+                        // Display API key (masked for security)
+                        if (data.api_key) {
+                            const maskedKey = data.api_key.length > 12 ? 
+                                data.api_key.substring(0, 8) + '...' + data.api_key.substring(data.api_key.length - 4) : 
+                                '***';
+                            document.getElementById('qrz-display-api-key').textContent = maskedKey;
+                        } else {
+                            document.getElementById('qrz-display-api-key').textContent = 'Niet ingesteld';
+                        }
+                        
+                        document.getElementById('qrz-display-updated').textContent = 'Nu geladen';
+                    } else {
+                        document.getElementById('qrz-display-callsign').textContent = 'Fout bij laden';
+                        document.getElementById('qrz-display-api-key').textContent = 'Fout bij laden';
+                        document.getElementById('qrz-display-updated').textContent = '-';
+                    }
+                })
+                .catch(error => {
+                    console.log('Fout bij laden QRZ configuratie:', error);
+                    document.getElementById('qrz-display-callsign').textContent = 'Fout';
+                    document.getElementById('qrz-display-api-key').textContent = 'Fout';
+                    document.getElementById('qrz-display-updated').textContent = '-';
+                });
+        }
+
+        // Test QRZ API connection
+        function testQRZAPI() {
+            const resultDiv = document.getElementById('qrz-api-test-result');
+            resultDiv.innerHTML = '⏳ QRZ API testen...';
+            
+            fetch('/admin/test_qrz_api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="api-success">
+                            <strong>✅ ${data.test_result}</strong><br>
+                            <small>Callsign: ${data.callsign} | API Key: ${data.api_key}</small><br>
+                            <small>Response: ${data.response_length} karakters ontvangen</small>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="api-error">
+                            <strong>${data.test_result}</strong><br>
+                            <small>${data.error}</small>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <div class="api-error">
+                        ❌ Test fout: ${error.message}
+                    </div>
+                `;
+            });
+        }
+
+        // Auto-refresh management
+        let autoRefreshInterval = null;
+        let refreshPaused = false;
+        
+        function updateRefreshStatus() {
+            const statusElement = document.getElementById('refresh-status');
+            if (refreshPaused) {
+                statusElement.textContent = '⏸️ Auto-refresh: Gepauzeerd';
+                statusElement.className = 'refresh-status paused';
+                statusElement.title = 'Auto-refresh gepauzeerd - Modal is open';
+            } else {
+                statusElement.textContent = '🔄 Auto-refresh: Actief';
+                statusElement.className = 'refresh-status active';
+                statusElement.title = 'Auto-refresh actief - Ververst elke 10 seconden';
+            }
+        }
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(function() {
+                if (!refreshPaused) {
+                    window.location.reload();
+                }
+            }, 10000);
+            updateRefreshStatus();
+        }
+        
+        function pauseAutoRefresh() {
+            refreshPaused = true;
+            updateRefreshStatus();
+            console.log('🔄 Auto-refresh gepauzeerd voor modal');
+        }
+        
+        function resumeAutoRefresh() {
+            refreshPaused = false;
+            updateRefreshStatus();
+            console.log('🔄 Auto-refresh hervat');
+        }
+
+        // QRZ Configuration Functions
+        function openQRZConfig() {
+            const modal = document.getElementById('qrzModal');
+            modal.style.display = 'block';
+            
+            // Pause auto-refresh while modal is open
+            pauseAutoRefresh();
+            
+            // Load current configuration
+            fetch('/admin/get_qrz_config')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('qrz_callsign').value = data.callsign || '';
+                    document.getElementById('qrz_api_key').value = data.api_key || '';
+                })
+                .catch(error => {
+                    console.log('Geen bestaande configuratie gevonden');
+                });
+        }
+
+        function closeQRZConfig() {
+            const modal = document.getElementById('qrzModal');
+            modal.style.display = 'none';
+            document.getElementById('qrzStatus').style.display = 'none';
+            
+            // Resume auto-refresh when modal is closed
+            resumeAutoRefresh();
+        }
+
+        // Close modal when clicking outside or pressing ESC
+        window.onclick = function(event) {
+            const modal = document.getElementById('qrzModal');
+            if (event.target == modal) {
+                closeQRZConfig();
+            }
+        }
+        
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('qrzModal');
+                if (modal.style.display === 'block') {
+                    closeQRZConfig();
+                }
+            }
+        });
+        
+        // Handle QRZ form submission
+        document.getElementById('qrzForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                callsign: formData.get('callsign'),
+                api_key: formData.get('api_key')
+            };
+            
+            const statusDiv = document.getElementById('qrzStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'qrz-status';
+            statusDiv.innerHTML = '⏳ Bezig met opslaan...';
+            
+            fetch('/admin/qrz_config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'qrz-status success';
+                    statusDiv.innerHTML = '✅ ' + data.message;
+                    setTimeout(() => {
+                        closeQRZConfig();
+                        // Reload QRZ config display after successful update
+                        loadQRZConfig();
+                    }, 2000);
+                } else {
+                    statusDiv.className = 'qrz-status error';
+                    statusDiv.innerHTML = '❌ ' + data.error;
+                }
+            })
+            .catch(error => {
+                statusDiv.className = 'qrz-status error';
+                statusDiv.innerHTML = '❌ Fout bij opslaan: ' + error.message;
+            });
+        });
+        
+        // Start auto-refresh when page loads
+        startAutoRefresh();
+        
+        // Load QRZ configuration on page load
+        loadQRZConfig();
+    </script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script>
+    const socket = io();
+    socket.on('entries_updated', function() {
+        location.reload();
+    });
+    </script>
+</body>
+</html>
