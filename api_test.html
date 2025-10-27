@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUCS API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { border-left: 4px solid #27ae60; }
+        .error { border-left: 4px solid #e74c3c; }
+        .info { border-left: 4px solid #3498db; }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2980b9; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .loading { color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <h1>🧪 PUCS API Test Tool</h1>
+    <p>Test deze pagina om te controleren of je API correct werkt vanaf je commerciële hosting.</p>
+    
+    <div class="test-box info">
+        <h3>📡 API Configuratie</h3>
+        <p><strong>API Base URL:</strong> <code>http://......136:5000/api</code></p>
+        <p><strong>Admin URL:</strong> <code>http://......136:5000/admin</code></p>
+    </div>
+
+    <div class="test-box">
+        <h3>🔍 API Tests</h3>
+        <button onclick="testApiConnection()">Test API Verbinding</button>
+        <button onclick="testGetEntries()">Test GET Entries</button>
+        <button onclick="testAddEntry()">Test ADD Entry</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://......136:5000/api';
+        
+        function addResult(title, content, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-box ${type}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                ${content}
+                <small>Tijd: ${new Date().toLocaleTimeString()}</small>
+            `;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testApiConnection() {
+            addResult('🔄 Test API Verbinding...', '<div class="loading">Bezig met testen...</div>');
+            
+            try {
+                const response = await fetch(`${API_BASE}/entries`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    addResult('✅ API Verbinding OK', `
+                        <p>Status: ${response.status} ${response.statusText}</p>
+                        <p>Headers: ${JSON.stringify(Object.fromEntries(response.headers), null, 2)}</p>
+                    `, 'success');
+                } else {
+                    addResult('❌ API Verbinding Mislukt', `
+                        <p>Status: ${response.status} ${response.statusText}</p>
+                        <p>Dit kan duiden op CORS problemen of server issues.</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                addResult('❌ Netwerkfout', `
+                    <p>Error: ${error.message}</p>
+                    <p>Mogelijke oorzaken:</p>
+                    <ul>
+                        <li>Port forwarding werkt niet</li>
+                        <li>Backend server is offline</li>
+                        <li>Firewall blokkeert verbinding</li>
+                        <li>CORS niet correct geconfigureerd</li>
+                    </ul>
+                `, 'error');
+            }
+        }
+
+        async function testGetEntries() {
+            addResult('🔄 Test GET Entries...', '<div class="loading">Ophalen van entries...</div>');
+            
+            try {
+                const response = await fetch(`${API_BASE}/entries`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Check data structure
+                    if (data.entries && Array.isArray(data.entries)) {
+                        const sampleEntry = data.entries[0];
+                        
+                        addResult('✅ GET Entries OK', `
+                            <p>Aantal entries: ${data.entries.length}</p>
+                            <p>Data structuur ziet er goed uit!</p>
+                            ${sampleEntry ? `
+                                <h4>Voorbeeld entry:</h4>
+                                <pre>${JSON.stringify(sampleEntry, null, 2)}</pre>
+                                <h4>Field mapping check:</h4>
+                                <ul>
+                                    <li>callsign: ${sampleEntry.callsign ? '✅' : '❌'}</li>
+                                    <li>entered_at: ${sampleEntry.entered_at ? '✅' : '❌'}</li>
+                                    <li>frequency: ${sampleEntry.frequency !== undefined ? '✅' : '❌'}</li>
+                                </ul>
+                            ` : '<p>Nog geen entries in database.</p>'}
+                        `, 'success');
+                    } else {
+                        addResult('⚠️ Onverwachte Data Structuur', `
+                            <p>API response heeft niet de verwachte structuur.</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        `, 'error');
+                    }
+                } else {
+                    addResult('❌ GET Entries Mislukt', `
+                        <p>Status: ${response.status} ${response.statusText}</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                addResult('❌ GET Entries Error', `<p>Error: ${error.message}</p>`, 'error');
+            }
+        }
+
+        async function testAddEntry() {
+            addResult('🔄 Test ADD Entry...', '<div class="loading">Toevoegen van test entry...</div>');
+            
+            const testEntry = {
+                callsign: 'TEST123',
+                frequency: 14.205
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/entries`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testEntry)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('✅ ADD Entry OK', `
+                        <p>Test entry succesvol toegevoegd!</p>
+                        <p>Request: <pre>${JSON.stringify(testEntry, null, 2)}</pre></p>
+                        <p>Response: <pre>${JSON.stringify(data, null, 2)}</pre></p>
+                    `, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult('❌ ADD Entry Mislukt', `
+                        <p>Status: ${response.status} ${response.statusText}</p>
+                        <p>Response: ${errorText}</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                addResult('❌ ADD Entry Error', `<p>Error: ${error.message}</p>`, 'error');
+            }
+        }
+
+        // Auto-run basic connection test on load
+        window.addEventListener('load', () => {
+            setTimeout(testApiConnection, 1000);
+        });
+    </script>
+</body>
+</html>
